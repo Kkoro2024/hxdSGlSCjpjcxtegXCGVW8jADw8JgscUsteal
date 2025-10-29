@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steal a Teacher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Black', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            z-index: 100;
+        }
+
+        h1 {
+            font-size: 36px;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .currency-display {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .view-bases-btn {
+            position: fixed;
+            top: 150px;
+            left: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+            z-index: 100;
+            transition: transform 0.2s;
+        }
+
+        .view-bases-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .teacher-index-btn {
+            position: fixed;
+            top: 220px;
+            left: 20px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+            z-index: 100;
+            transition: transform 0.2s;
+        }
+
+        .teacher-index-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .game-area {
+            position: relative;
+            width: 100vw;
+            height: calc(100vh - 140px);
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 50%, #ffd3a5 100%);
+            overflow: hidden;
+        }
+
+        .red-carpet {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 250px;
+            height: 100%;
+            background: linear-gradient(180deg, 
+                rgba(139, 0, 0, 0.9) 0%,
+                rgba(178, 34, 34, 0.9) 50%,
+                rgba(139, 0, 0, 0.9) 100%);
+            border-left: 15px solid #8B4513;
+            border-right: 15px solid #8B4513;
+            box-shadow: 
+                inset 0 0 50px rgba(0,0,0,0.3),
+                0 0 30px rgba(139, 0, 0, 0.5);
+        }
+
+        .carpet-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 40px,
+                rgba(0,0,0,0.1) 40px,
+                rgba(0,0,0,0.1) 45px
+            );
+        }
+
+        .base {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            border: 5px solid #333;
+            border-radius: 20px;
+            padding: 20px;
+            min-width: 300px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 50;
+        }
+
+        .base h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .base-stats {
+            display: flex;
+            justify-content: space-around;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .teacher-spawn {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s;
+            animation: moveDown 8s linear forwards;
+            z-index: 10;
+        }
+
+        @keyframes moveDown {
+            from {
+                top: -200px;
+            }
+            to {
+                top: calc(100vh - 300px);
+            }
+        }
+
+        .teacher-spawn.moving-to-base {
+            animation: moveToBase 1s ease-in-out forwards;
+        }
+
+        @keyframes moveToBase {
+            to {
+                left: 50% !important;
+                top: calc(100vh - 280px) !important;
+                transform: translateX(-50%) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .teacher-spawn:hover {
+            transform: scale(1.1);
+            z-index: 20;
+        }
+
+        .teacher-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            min-width: 180px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 4px solid;
+            text-align: center;
+        }
+
+        .teacher-card.common { border-color: #808080; }
+        .teacher-card.rare { border-color: #2193b0; box-shadow: 0 0 15px rgba(33, 147, 176, 0.5); }
+        .teacher-card.epic { border-color: #d946ef; box-shadow: 0 0 20px rgba(217, 70, 239, 0.6); }
+        .teacher-card.legendary { border-color: #ff8c00; box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); animation: legendary-pulse 2s infinite; }
+
+        @keyframes legendary-pulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); }
+            50% { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+        }
+
+        .rarity-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .rarity-badge.common { background: #808080; color: white; }
+        .rarity-badge.rare { background: #2193b0; color: white; }
+        .rarity-badge.epic { background: #d946ef; color: white; }
+        .rarity-badge.legendary { background: #ff8c00; color: white; }
+
+        .teacher-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin: 5px 0;
+        }
+
+        .teacher-cost {
+            color: #ffa500;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .teacher-income {
+            color: #00aa00;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            top: 150px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            z-index: 1000;
+            animation: slideIn 0.3s, slideOut 0.3s 2.7s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 20px;
+            top: 150px;
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            width: 250px;
+            max-height: calc(100vh - 350px);
+            overflow-y: auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .owned-teacher {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 12px;
+            border-left: 4px solid;
+        }
+
+        .owned-teacher.common { border-color: #808080; }
+        .owned-teacher.rare { border-color: #2193b0; }
+        .owned-teacher.epic { border-color: #d946ef; }
+        .owned-teacher.legendary { border-color: #ff8c00; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #ff5555;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .player-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .player-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid #333;
+            transition: transform 0.2s;
+        }
+
+        .player-card:hover {
+            transform: scale(1.02);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .player-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.5);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .player-teachers {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .player-teacher-item {
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            text-align: center;
+            border-left: 4px solid;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-box input {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .index-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .index-teacher-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 3px solid;
+            transition: transform 0.2s;
+        }
+
+        .index-teacher-card:hover {
+            transform: scale(1.05);
+        }
+
+        .index-teacher-card.common { border-color: #808080; }
+        .index-teacher-card.rare { border-color: #2193b0; }
+        .index-teacher-card.epic { border-color: #d946ef; }
+        .index-teacher-card.legendary { border-color: #ff8c00; }
+
+        .index-teacher-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin: 8px 0;
+        }
+
+        .index-teacher-stats {
+            font-size: 13px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .username-input {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 300;
+        }
+
+        .username-input h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .username-input input {
+            padding: 15px;
+            font-size: 18px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            width: 300px;
+            margin-bottom: 20px;
+        }
+
+        .username-input button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="username-input" id="usernamePrompt">
+        <h2>Welcome! Enter Your Username</h2>
+        <input type="text" id="usernameField" placeholder="Enter username..." maxlength="20">
+        <br>
+        <button onclick="setUsername()">Start Playing!</button>
+    </div>
+
+    <div class="header">
+        <h1>🎓 STEAL A TEACHER 🎓</h1>
+        <div class="currency-display">💰 <span id="currency">0</span> Coins</div>
+        <div class="stats">
+            <span>Income: <strong id="income">0</strong>/sec</span>
+            <span>Owned: <strong id="owned">0</strong></span>
+            <span>Player: <strong id="playerName">-</strong></span>
+        </div>
+    </div>
+
+    <button class="view-bases-btn" onclick="openBasesModal()">👥 View Other Bases</button>
+    <button class="teacher-index-btn" onclick="openTeacherIndex()">📚 Teacher Index</button>
+
+    <div class="game-area" id="gameArea">
+        <div class="red-carpet">
+            <div class="carpet-pattern"></div>
+        </div>
+        <div class="base">
+            <h2>🏠 YOUR BASE</h2>
+            <div class="base-stats">
+                <div>Teachers: <strong id="baseCount">0</strong></div>
+                <div>Total Income: <strong id="baseIncome">0</strong>/sec</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <h3>Your Teachers</h3>
+        <div id="ownedList"></div>
+    </div>
+
+    <div class="modal" id="basesModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeBasesModal()">×</button>
+            <h2>🌍 Other Players' Bases</h2>
+            <div class="search-box">
+                <input type="text" id="playerSearch" placeholder="Search for a player..." oninput="filterPlayers()">
+            </div>
+            <div class="player-list" id="playerList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="teacherIndexModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeTeacherIndex()">×</button>
+            <h2>📚 Teacher Index</h2>
+            <div class="index-grid" id="teacherIndexGrid"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.0/firebase-database-compat.min.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPYpnSMhWLfZUS8PIMZZlPErATo77fcdk",
+            authDomain: "steal-61700.firebaseapp.com",
+            databaseURL: "https://steal-61700-default-rtdb.firebaseio.com",
+            projectId: "steal-61700",
+            storageBucket: "steal-61700.firebasestorage.app",
+            messagingSenderId: "1029741235769",
+            appId: "1:1029741235769:web:9976c9909d18e4dee2c7e8"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const teachers = {
+            common: [
+                {name: "Mr. Z", cost: 10, income: 1},
+                {name: "Mr. Catizone", cost: 15, income: 1},
+                {name: "Coach Goldstein", cost: 20, income: 2},
+                {name: "Coach Carter", cost: 25, income: 2},
+                {name: "Ms. Mulcock", cost: 30, income: 3},
+                {name: "Ms. Adair", cost: 35, income: 3},
+                {name: "Ms. Botbyl", cost: 40, income: 4},
+                {name: "Mr. Stadtlander", cost: 45, income: 4},
+                {name: "Ms. Steenstra", cost: 50, income: 5},
+                {name: "Ms. Ingis", cost: 55, income: 5},
+                {name: "Mr. Carapezza", cost: 60, income: 6},
+                {name: "Ms. DeRooy", cost: 65, income: 6},
+                {name: "Mr. Flim", cost: 70, income: 7},
+                {name: "Ms. Genuario", cost: 75, income: 7},
+                {name: "Ms. Heerema", cost: 80, income: 8},
+                {name: "Ms. Rhyu", cost: 85, income: 8}
+            ],
+            rare: [
+                {name: "Mr. Yang", cost: 150, income: 20},
+                {name: "Mrs. Kim", cost: 200, income: 25},
+                {name: "Ms. Kuperus", cost: 250, income: 30},
+                {name: "Mr. Hwang", cost: 300, income: 35},
+                {name: "Mr. Garcia", cost: 350, income: 40},
+                {name: "Mr. Cirone", cost: 400, income: 45},
+                {name: "Mr. Spoelstra", cost: 450, income: 50}
+            ],
+            epic: [
+                {name: "Mr. Verrengia", cost: 800, income: 100},
+                {name: "Mr. Struck", cost: 1000, income: 125},
+                {name: "Ms. Provencher", cost: 1200, income: 150},
+                {name: "Ms. Post", cost: 1400, income: 175},
+                {name: "Mr. Culp", cost: 1600, income: 200}
+            ],
+            legendary: [
+                {name: "Mr. U", cost: 5000, income: 500},
+                {name: "Mrs. Lindemulder", cost: 10000, income: 1000}
+            ]
+        };
+
+        let currency = 50;
+        let income = 0;
+        let ownedTeachers = {};
+        let spawnedTeachers = new Set();
+        let username = '';
+        let userId = '';
+        let allPlayersData = [];
+
+        function setUsername() {
+            const input = document.getElementById('usernameField');
+            username = input.value.trim();
+            
+            if (username.length < 1) {
+                alert('Please enter a username!');
+                return;
+            }
+            
+            // Generate unique user ID
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            document.getElementById('usernamePrompt').style.display = 'none';
+            document.getElementById('playerName').textContent = username;
+            
+            loadPlayerData();
+            startGame();
+        }
+
+        function loadPlayerData() {
+            // Load existing player data from Firebase
+            database.ref('players/' + userId).once('value').then((snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    currency = data.currency || 50;
+                    income = data.income || 0;
+                    
+                    // Restore original teacher names
+                    ownedTeachers = {};
+                    for (let key in data.ownedTeachers) {
+                        const teacher = data.ownedTeachers[key];
+                        const originalName = teacher.originalName || key;
+                        ownedTeachers[originalName] = teacher;
+                    }
+                    
+                    updateStats();
+                    updateOwnedList();
+                    console.log('Loaded player data:', data);
+                }
+            }).catch((error) => {
+                console.error('Error loading player data:', error);
+            });
+        }
+
+        function sanitizeKey(key) {
+            // Replace periods and other invalid Firebase characters
+            return key.replace(/[.#$\/\[\]]/g, '_');
+        }
+
+        function savePlayerData() {
+            if (!userId) return;
+            
+            // Sanitize teacher names for Firebase
+            const sanitizedTeachers = {};
+            for (let name in ownedTeachers) {
+                const sanitizedName = sanitizeKey(name);
+                sanitizedTeachers[sanitizedName] = {
+                    ...ownedTeachers[name],
+                    originalName: name // Store original name
+                };
+            }
+            
+            const data = {
+                username: username,
+                currency: Math.floor(currency),
+                income: income,
+                ownedTeachers: sanitizedTeachers,
+                lastUpdated: Date.now()
+            };
+            
+            console.log('Saving player data:', data);
+            
+            database.ref('players/' + userId).set(data)
+                .then(() => {
+                    console.log('Data saved successfully');
+                })
+                .catch((error) => {
+                    console.error('Error saving data:', error);
+                });
+        }
+
+        function startGame() {
+            // Income generation
+            setInterval(() => {
+                currency += income / 10;
+                updateStats();
+            }, 100);
+
+            // Spawn teachers
+            setInterval(() => {
+                spawnTeacher();
+            }, 2000);
+
+            // Auto-save every 3 seconds (more frequent)
+            setInterval(() => {
+                savePlayerData();
+            }, 3000);
+
+            // Initial save
+            savePlayerData();
+            updateStats();
+        }
+
+        function getRarityByChance() {
+            const rand = Math.random() * 100;
+            if (rand < 50) return 'common';
+            if (rand < 80) return 'rare';
+            if (rand < 95) return 'epic';
+            return 'legendary';
+        }
+
+        function spawnTeacher() {
+            const rarity = getRarityByChance();
+            const teacherList = teachers[rarity];
+            const teacher = teacherList[Math.floor(Math.random() * teacherList.length)];
+            
+            const id = Date.now() + Math.random();
+            spawnedTeachers.add(id);
+            
+            const spawn = document.createElement('div');
+            spawn.className = 'teacher-spawn';
+            spawn.id = `spawn-${id}`;
+            spawn.style.left = 'calc(50% - 90px)';
+            
+            spawn.innerHTML = `
+                <div class="teacher-card ${rarity}">
+                    <div class="rarity-badge ${rarity}">${rarity}</div>
+                    <div class="teacher-name">${teacher.name}</div>
+                    <div class="teacher-cost">💰 ${teacher.cost}</div>
+                    <div class="teacher-income">+${teacher.income}/sec</div>
+                </div>
+            `;
+            
+            spawn.onclick = () => buyTeacher(teacher, id, spawn);
+            document.getElementById('gameArea').appendChild(spawn);
+            
+            setTimeout(() => {
+                if (spawnedTeachers.has(id)) {
+                    spawn.remove();
+                    spawnedTeachers.delete(id);
+                }
+            }, 8000);
+        }
+
+        function buyTeacher(teacher, id, spawn) {
+            if (!spawnedTeachers.has(id)) return;
+            
+            if (currency >= teacher.cost) {
+                currency -= teacher.cost;
+                income += teacher.income;
+                
+                if (!ownedTeachers[teacher.name]) {
+                    ownedTeachers[teacher.name] = {...teacher, count: 0};
+                }
+                ownedTeachers[teacher.name].count++;
+                
+                spawn.classList.add('moving-to-base');
+                spawn.onclick = null;
+                spawnedTeachers.delete(id);
+                
+                setTimeout(() => spawn.remove(), 1000);
+                
+                showNotification(`Hired ${teacher.name}! +${teacher.income}/sec`);
+                updateStats();
+                updateOwnedList();
+                savePlayerData();
+            } else {
+                showNotification('Not enough coins!');
+            }
+        }
+
+        function showNotification(message) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function updateStats() {
+            document.getElementById('currency').textContent = Math.floor(currency);
+            document.getElementById('income').textContent = income;
+            
+            let totalTeachers = 0;
+            for (let name in ownedTeachers) {
+                totalTeachers += ownedTeachers[name].count;
+            }
+            document.getElementById('owned').textContent = totalTeachers;
+            document.getElementById('baseCount').textContent = totalTeachers;
+            document.getElementById('baseIncome').textContent = income;
+        }
+
+        function updateOwnedList() {
+            const list = document.getElementById('ownedList');
+            list.innerHTML = '';
+            
+            for (let name in ownedTeachers) {
+                const teacher = ownedTeachers[name];
+                const div = document.createElement('div');
+                div.className = `owned-teacher ${teacher.rarity}`;
+                div.innerHTML = `
+                    <strong>${teacher.name}</strong> x${teacher.count}<br>
+                    <span style="color: #00aa00;">+${teacher.income * teacher.count}/sec</span>
+                `;
+                list.appendChild(div);
+            }
+        }
+
+        function openBasesModal() {
+            document.getElementById('basesModal').classList.add('active');
+            loadAllPlayers();
+        }
+
+        function closeBasesModal() {
+            document.getElementById('basesModal').classList.remove('active');
+        }
+
+        function loadAllPlayers() {
+            const playerList = document.getElementById('playerList');
+            playerList.innerHTML = '<p style="text-align:center;">Loading players...</p>';
+            
+            database.ref('players').once('value').then((snapshot) => {
+                allPlayersData = [];
+                snapshot.forEach((childSnapshot) => {
+                    const player = childSnapshot.val();
+                    if (player) {
+                        console.log('Loaded player:', player);
+                        allPlayersData.push(player);
+                    }
+                });
+                
+                console.log('Total players loaded:', allPlayersData.length);
+                
+                if (allPlayersData.length === 0) {
+                    playerList.innerHTML = '<p style="text-align:center;">No other players yet!</p>';
+                    return;
+                }
+                
+                // Sort by income (highest first)
+                allPlayersData.sort((a, b) => b.income - a.income);
+                
+                displayPlayers(allPlayersData);
+            }).catch((error) => {
+                console.error('Error loading players:', error);
+                playerList.innerHTML = '<p style="text-align:center;">Error loading players!</p>';
+            });
+        }
+
+        function displayPlayers(players) {
+            const playerList = document.getElementById('playerList');
+            playerList.innerHTML = '';
+            
+            if (players.length === 0) {
+                playerList.innerHTML = '<div class="no-results">No players found</div>';
+                return;
+            }
+            
+            players.forEach(player => {
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                
+                let teacherCount = 0;
+                for (let name in player.ownedTeachers) {
+                    teacherCount += player.ownedTeachers[name].count;
+                }
+                
+                let teachersHTML = '';
+                for (let key in player.ownedTeachers) {
+                    const t = player.ownedTeachers[key];
+                    const displayName = t.originalName || key;
+                    teachersHTML += `
+                        <div class="player-teacher-item ${t.rarity}">
+                            ${displayName} x${t.count}
+                        </div>
+                    `;
+                }
+                
+                card.innerHTML = `
+                    <div class="player-header">
+                        <div class="player-name">${player.username}</div>
+                    </div>
+                    <div class="player-stats">
+                        <div class="stat-box">
+                            <div class="stat-label">Coins</div>
+                            <div class="stat-value">${player.currency}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Income</div>
+                            <div class="stat-value">${player.income}/s</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Teachers</div>
+                            <div class="stat-value">${teacherCount}</div>
+                        </div>
+                    </div>
+                    <div class="player-teachers">
+                        ${teachersHTML}
+                    </div>
+                `;
+                
+                playerList.appendChild(card);
+            });
+        }
+
+        function filterPlayers() {
+            const searchTerm = document.getElementById('playerSearch').value.toLowerCase();
+            
+            if (searchTerm === '') {
+                displayPlayers(allPlayersData);
+                return;
+            }
+            
+            const filtered = allPlayersData.filter(player => 
+                player.username.toLowerCase().includes(searchTerm)
+            );
+            
+            displayPlayers(filtered);
+        }
+
+        function openTeacherIndex() {
+            document.getElementById('teacherIndexModal').classList.add('active');
+            displayTeacherIndex();
+        }
+
+        function closeTeacherIndex() {
+            document.getElementById('teacherIndexModal').classList.remove('active');
+        }
+
+        function displayTeacherIndex() {
+            const grid = document.getElementById('teacherIndexGrid');
+            grid.innerHTML = '';
+            
+            const rarities = ['legendary', 'epic', 'rare', 'common'];
+            
+            rarities.forEach(rarity => {
+                const section = document.createElement('div');
+                section.style.gridColumn = '1 / -1';
+                section.innerHTML = `<h3 style="color: #333; margin: 20px 0 10px 0; text-transform: uppercase;">${rarity} Teachers</h3>`;
+                grid.appendChild(section);
+                
+                teachers[rarity].forEach(teacher => {
+                    const card = document.createElement('div');
+                    card.className = `index-teacher-card ${rarity}`;
+                    
+                    card.innerHTML = `
+                        <div class="rarity-badge ${rarity}">${rarity}</div>
+                        <div class="index-teacher-name">${teacher.name}</div>
+                        <div class="index-teacher-stats">💰 Cost: ${teacher.cost}</div>
+                        <div class="index-teacher-stats" style="color: #00aa00; font-weight: bold;">+${teacher.income}/sec</div>
+                    `;
+                    
+                    grid.appendChild(card);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
